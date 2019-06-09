@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Real-time Chatroom!</title>
+        <!-- <link rel="stylesheet" type="text/css" href="/css/style.css" /> -->
+        <style>
+            html, body, input {
+                font-family: Georgia, Tahoma, Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                
+                padding: 10px;
+            }
+            form {
+                margin: 15px 0;
+            }
+            form input[type='text'] {
+                border: 2px solid #eb5424;
+                border-radius: 5px;
+                padding: 5px;
+                width: 75%;
+            }
+            form input[type='submit'] {
+                background: #eb5424;
+                border: none;
+                border-radius: 5px;
+                color: #FFF;
+                cursor: pointer;
+                font-weight: bold;
+                padding: 7px 5px;
+                width: 19%;
+            }
+            #chat_zone strong {
+                font-family: Georgia, Tahoma, Arial, sans-serif;
+                color: rgb(10, 12, 12);
+                background-color: rgb(245, 233, 71);
+                cursor: pointer;
+                font-weight: bold;
+                padding: 2px;
+                border-radius: 5px;
+                width: 19%;
+            }
+        </style>
+    </head>
+ 
+    <body>
+        <h1>Real-time Chatroom!</h1>
+
+        <form action="/" method="post" id="chat_form">
+            <input type="text" name="message" id="message" placeholder="Your message..." size="50" autofocus />
+            <input type="submit" id="send_message" value="Send" />
+        </form>
+
+        <section id="chat_zone">
+            
+        </section>
+
+
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+
+            // Connecting to socket.io
+            var socket = io.connect('http://localhost:8080');
+
+            // The username is requested, sent to the server and displayed in the title
+            var username = prompt('What\'s your username?');
+            socket.emit('new_client', username);
+            document.title = username + ' - ' + document.title;
+
+            // When a message is received it's inserted in the page
+            socket.on('message', function(data) {
+                insertMessage(data.username, data.message)
+            })
+
+            // When a new client connects, the information is displayed
+            socket.on('new_client', function(username) {
+                $('#chat_zone').prepend('<p><em>' + username + ' has joined the chat!</em></p>');
+            })
+
+            // // When a  client leaves, the information is displayed
+            // socket.on('user_leave', function(username) {
+            //     $('#chat_zone').prepend('<p><em>' + username + 'has left the chat.</em></p>';
+            // })
+
+            // When the form is sent, the message is sent and displayed on the page
+            $('#chat_form').submit(function () {
+                var message = $('#message').val();
+                socket.emit('message', message); // Sends the message to the others
+                insertMessage(username, message); // Also displays the message on our page
+                $('#message').val('').focus(); // Empties the chat form and puts the focus back on it
+                return false; // Blocks 'classic' sending of the form
+            });
+            
+
+            
+
+            // Adds a message to the page
+            function insertMessage(username, message) {
+                $('#chat_zone').prepend(getdate()+'<p><strong>' + username + '</strong> ' + message + '</p>');
+            }
+
+            function getdate() {
+                var currentDate = new Date();
+                var day = (currentDate.getDate() < 10 ? '0' : '') + currentDate.getDate();
+                var month = ((currentDate.getMonth() + 1) < 10 ? '0' : '') + (currentDate.getMonth() + 1);
+                var year = currentDate.getFullYear();
+                var hour = (currentDate.getHours() < 10 ? '0' : '') + currentDate.getHours();
+                var minute = (currentDate.getMinutes() < 10 ? '0' : '') + currentDate.getMinutes();
+                var second = (currentDate.getSeconds() < 10 ? '0' : '') + currentDate.getSeconds();
+                return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+            }
+
+
+
+        </script>
+    </body>
+</html>
